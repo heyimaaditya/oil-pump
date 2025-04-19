@@ -6,7 +6,9 @@
     "scripts": {
         "build": "tsc",
         "start": "node dist/main.js",
-        "dev": "ts-node src/main.ts"
+        "start:prod": "NODE_ENV=production node dist/main.js",
+        "dev": "pino-pretty -c -t SYS:standard | ts-node src/main.ts",
+        "test": "jest"
     },
     "keywords": [
         "kafka",
@@ -17,7 +19,8 @@
     "author": "Aaditya",
     "license": "ISC",
     "dependencies": {
-        "kafkajs": "^2.2.4"
+        "kafkajs": "^2.2.4",
+        "pino": "^9.6.0"
     },
     "devDependencies": {
         "@types/jest": "^29.5.14",
