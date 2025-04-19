@@ -1,64 +1,86 @@
-import express, { Express } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import dataRoutes from './routes/data.routes';
+import pinoHttp from 'pino-http'; // Import pino-http
+import { config } from './config';
+import logger from './logger'; // Import pino logger
+import apiRoutes from './routes/data.routes';
 import { KafkaConsumerService } from './services/kafka-consumer.service';
-import { dbService } from './services/db.service'; // Singleton
+import { dbService } from './services/db.service';
 
 const app: Express = express();
-const port = process.env.PORT || 8080;
-
+const port = config.server.port;
 const kafkaConsumer = new KafkaConsumerService();
 
-// Middleware
-app.use(cors()); // Enable CORS for all origins (adjust for production)
-app.use(express.json()); // Parse JSON bodies
 
-// API Routes
-app.use('/api', dataRoutes); // Prefix API routes
+app.use(pinoHttp({ logger }));
 
-// Health Check endpoint
-app.get('/health', (req, res) => {
+// 2. CORS
+app.use(cors({ origin: config.server.corsOrigin })); 
 
-    res.status(200).send('OK');
+// 3. Body Parsing
+app.use(express.json());
+
+
+function verifyApiKey(req: Request, res: Response, next: NextFunction): void {
+    if (!req.headers['x-api-key'] || req.headers['x-api-key'] !== config.server.apiKey) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    next();
+}
+app.use('/api', verifyApiKey, apiRoutes); 
+
+
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    logger.error({ err, requestId: (req as any).id }, 'Unhandled error caught in global handler');
+    res.status(err.status || 500).json({
+        error: 'Internal Server Error',
+        message: err.message || 'An unexpected error occurred',
+    });
 });
 
-
-// Start function
+// --- Start Function ---
 async function startServer() {
     try {
-        console.log('Initializing service...');
+        logger.info('Initializing data-consumer service...');
 
-        // 1. Connect to Database
-        await dbService.connect(); // Ensure DB is reachable
+        // 1. Connect to Database (includes check)
+        await dbService.connect();
 
-        // 2. Start Kafka Consumer (Connects and starts consuming)
+        // 2. Start Kafka Consumer
         await kafkaConsumer.connectAndConsume();
 
         // 3. Start Express Server
         const server = app.listen(port, () => {
-            console.log(`Data Consumer API server running at http://localhost:${port}`);
+            logger.info(`Data Consumer API server running at http://localhost:${port}`);
         });
 
-        // Graceful Shutdown
+        // --- Graceful Shutdown ---
         const shutdown = async (signal: string) => {
-            console.log(`${signal} received. Shutting down gracefully...`);
+            logger.info({ signal }, `Received ${signal}. Shutting down gracefully...`);
             server.close(async () => {
-                console.log('HTTP server closed.');
+                logger.info('HTTP server closed.');
                 await kafkaConsumer.disconnect();
-                await dbService.close(); // Close DB pool
-                console.log('Resources cleaned up.');
+                await dbService.close();
+                logger.info('Resources cleaned up. Exiting.');
                 process.exit(0);
             });
+
+            // Force shutdown after timeout if graceful fails
+            setTimeout(() => {
+                logger.warn('Graceful shutdown timeout exceeded. Forcing exit.');
+                process.exit(1);
+            }, 10000); // 10 second timeout
         };
 
         process.on('SIGTERM', () => shutdown('SIGTERM'));
         process.on('SIGINT', () => shutdown('SIGINT'));
 
     } catch (error) {
-        console.error('Failed to start the service:', error);
+        logger.fatal({ err: error }, 'Failed to start the data-consumer service.');
         // Attempt cleanup even on startup failure
-        await kafkaConsumer.disconnect().catch(e => console.error("Error disconnecting Kafka on startup failure:", e));
-        await dbService.close().catch(e => console.error("Error closing DB on startup failure:", e));
+        await kafkaConsumer.disconnect().catch(e => logger.error({ err: e }, "Error disconnecting Kafka on startup failure"));
+        await dbService.close().catch(e => logger.error({ err: e }, "Error closing DB on startup failure"));
         process.exit(1);
     }
 }
