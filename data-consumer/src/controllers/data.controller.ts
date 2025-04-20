@@ -2,52 +2,28 @@ import { Request, Response } from 'express';
 import { dbService } from '../services/db.service';
 import logger from '../logger';
 
-// Helper to parse pagination params
 const getPaginationParams = (req: Request): { page: number; limit: number } => {
-    const page = parseInt(req.query.page as string || '1', 10);
-    const limit = parseInt(req.query.limit as string || '50', 10); // Default limit 50
-    return {
-        page: Math.max(1, page), // Ensure page is at least 1
-        limit: Math.min(100, Math.max(1, limit)) // Ensure limit is between 1 and 100
-    };
+    const rawPage = req.query.page; const rawLimit = req.query.limit;
+    let page = parseInt(rawPage as string || '1', 10); let limit = parseInt(rawLimit as string || '50', 10);
+    page = isNaN(page) || page < 1 ? 1 : page;
+    limit = isNaN(limit) || limit < 1 ? 10 : Math.min(100, limit); 
+    return { page, limit };
 };
 
-export const getPressureData = async (req: Request, res: Response): Promise<void> => {
-  const { page, limit } = getPaginationParams(req);
-  const requestLogger = logger.child({ requestId: (req as any).id, endpoint: '/pressure', page, limit }); // Use request ID from pino-http
-
-  try {
-    requestLogger.info('Fetching pressure data');
-    const paginatedResult = await dbService.getPressureData(page, limit);
-    res.status(200).json(paginatedResult); // Return the paginated structure
-  } catch (error) {
-    requestLogger.error({ err: error }, "API Error fetching pressure data");
-    res.status(500).json({ error: 'Failed to retrieve pressure data' });
-  }
-};
-
-export const getMaterialData = async (req: Request, res: Response): Promise<void> => {
+const handleApiResponse = async ( req: Request, res: Response, serviceCall: (page: number, limit: number) => Promise<any>, endpointName: string ) => {
     const { page, limit } = getPaginationParams(req);
-    const requestLogger = logger.child({ requestId: (req as any).id, endpoint: '/material', page, limit });
+    const requestLogger = logger.child({ endpoint: endpointName, page, limit, requestId: (req as any).id });
     try {
-        requestLogger.info('Fetching material data');
-        const paginatedResult = await dbService.getMaterialData(page, limit);
+        requestLogger.info(`Fetching ${endpointName} data`);
+        const paginatedResult = await serviceCall(page, limit);
+        requestLogger.info({ totalFound: paginatedResult.total }, `Successfully fetched ${endpointName} data`);
         res.status(200).json(paginatedResult);
-    } catch (error) {
-        requestLogger.error({ err: error }, "API Error fetching material data");
-        res.status(500).json({ error: 'Failed to retrieve material data' });
+    } catch (error: any) {
+        requestLogger.error({ err: error }, `API Error fetching ${endpointName} data`);
+        res.status(500).json({ error: `Failed to retrieve ${endpointName} data` });
     }
 };
 
-export const getFluidData = async (req: Request, res: Response): Promise<void> => {
-    const { page, limit } = getPaginationParams(req);
-    const requestLogger = logger.child({ requestId: (req as any).id, endpoint: '/fluid', page, limit });
-    try {
-        requestLogger.info('Fetching fluid data');
-        const paginatedResult = await dbService.getFluidData(page, limit);
-        res.status(200).json(paginatedResult);
-    } catch (error) {
-        requestLogger.error({ err: error }, "API Error fetching fluid data");
-        res.status(500).json({ error: 'Failed to retrieve fluid data' });
-    }
-};
+export const getPressureData = async (req: Request, res: Response): Promise<void> => { await handleApiResponse(req, res, dbService.getPressureData.bind(dbService), 'pressure'); };
+export const getMaterialData = async (req: Request, res: Response): Promise<void> => { await handleApiResponse(req, res, dbService.getMaterialData.bind(dbService), 'material'); };
+export const getFluidData = async (req: Request, res: Response): Promise<void> => { await handleApiResponse(req, res, dbService.getFluidData.bind(dbService), 'fluid'); };
