@@ -208,7 +208,6 @@ Follow these steps precisely to get the entire application running using Docker 
 
 ### 🧑‍💻 Development Notes
 
-*   **AI Assistance:** The project structure, feature implementation (including logging, auth, DLQ, secrets, pagination), Docker configurations, and troubleshooting were significantly developed and refined iteratively with the assistance of an AI model (like ChatGPT or Claude). Requirements were provided, and the AI generated code snippets and explanations, which were then integrated and tested.
 *   **Nginx Proxy:** The frontend service uses Nginx to serve the built Angular application and proxy API requests (`/api/*`) to the `data-consumer` service, handling CORS issues within the Docker network.
 *   **Docker Compose Overrides:** Environment variables set directly in the `environment:` section of `docker-compose.yml` (like `KAFKA_BROKERS: kafka:9092` or `POSTGRES_HOST: postgres`) override any values loaded from the `.env` file for that specific service, ensuring correct internal hostnames are used within Docker.
 
