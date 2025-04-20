@@ -1,82 +1,235 @@
-# Oil & Gas Panel System (Kafka, TypeScript, Node.js, Angular, PostgreSQL)
+# ⛽ Oil Pump Monitoring System 📊
 
-This project simulates real-time data from an oil pump, processes it through Kafka, stores it in PostgreSQL, and provides a web interface for monitoring using Angular.
+![Pipeline](https://img.shields.io/badge/Pipeline-Kafka-blue?logo=apachekafka) ![Database](https://img.shields.io/badge/Database-PostgreSQL-blue?logo=postgresql) ![Backend](https://img.shields.io/badge/Backend-Node.js%20(TS)-brightgreen?logo=nodedotjs) ![Frontend](https://img.shields.io/badge/Frontend-Angular-red?logo=angular) ![Infrastructure](https://img.shields.io/badge/Infra-Docker-blue?logo=docker)
 
-**Architecture:**
+## Overview
 
-* **data-producer (Node.js/TypeScript):** Simulates sensor data and publishes it to a Kafka topic (`oil_equipment_data`).
-* **Apache Kafka:** Message broker for decoupling the producer and consumer.
-* **PostgreSQL:** Database for storing the time-series equipment data.
-* **data-consumer (Node.js/TypeScript + Express):** Consumes data from Kafka, persists it to PostgreSQL, and exposes a REST API for the frontend.
-* **frontend (Angular):** Web interface built with Angular, Chart.js, and Bootstrap to visualize the data fetched from the `data-consumer` API.
-* **Docker Compose:** Orchestrates the deployment of all services.
+This project simulates an IoT scenario for monitoring oil pump sensor data. It demonstrates a full-stack application using a microservices-oriented approach with modern technologies and production-ready practices.
 
-**Technology Stack:**
+*   **Data Producer:** Simulates sensor readings (pressure, temperature, vibration, etc.) and publishes them to a Kafka topic.
+*   **Kafka Cluster:** Acts as a robust, scalable message broker.
+*   **Data Consumer:** Consumes messages from Kafka, performs basic validation, stores data in a PostgreSQL database, sends invalid messages to a Dead-Letter Queue (DLQ), and exposes a RESTful API for data retrieval.
+*   **PostgreSQL Database:** Persistently stores the processed sensor data.
+*   **Frontend:** An Angular application that visualizes the sensor data retrieved from the Data Consumer API using charts (Chart.js) and supports pagination.
 
-* Backend: Node.js, TypeScript, Express.js
-* Messaging: Apache Kafka (`kafkajs` client)
-* Database: PostgreSQL (`pg` client)
-* Frontend: Angular, Chart.js (`ng2-charts`), Bootstrap
-* Containerization: Docker, Docker Compose
+---
 
-**Project Structure:**
+### ✨ Core Features
+
+*   **Real-time Data Simulation:** Generates realistic (simulated) sensor data points.
+*   **Asynchronous Processing:** Leverages Apache Kafka for decoupling production and consumption.
+*   **Persistent Storage:** Uses PostgreSQL for reliable data storage.
+*   **API for Data Access:** Express.js backend providing data endpoints.
+*   **Data Visualization:** Angular frontend with Chart.js for clear data representation.
+*   **Containerized Deployment:** Fully containerized using Docker and Docker Compose for easy setup and consistent environments.
+*   **Structured Logging:** Implemented Pino for JSON-based logging in backend services, aiding observability.
+*   **API Key Authentication:** Simple API key validation middleware (`X-API-Key` header) secures the data API endpoints.
+*   **Dead-Letter Queue (DLQ):** The consumer sends messages that fail processing (after parsing) to a dedicated Kafka topic (`KAFKA_DLQ_TOPIC`) for later inspection or reprocessing.
+*   **Docker Secrets:** Manages the PostgreSQL password securely using Docker secrets.
+*   **Enhanced Health Checks:** The consumer API includes a `/health` endpoint that verifies database connectivity.
+*   **API Pagination:** GET endpoints support `page` and `limit` query parameters for efficient data retrieval, with pagination metadata included in the response.
+*   **Basic Testing Setup:** Includes Jest configuration and example test files (`*.test.ts`) for backend services.
+
+---
+
+### 🔧 Technology Stack
+
+*   **Backend:** Node.js, TypeScript, Express.js, KafkaJS, node-postgres (pg), Pino (logging)
+*   **Frontend:** Angular, TypeScript, Chart.js (via ng2-charts), Bootstrap
+*   **Messaging:** Apache Kafka, Zookeeper
+*   **Database:** PostgreSQL
+*   **Infrastructure:** Docker, Docker Compose, Nginx (for frontend serving/proxy)
+*   **Testing:** Jest (Backend), Angular Testing Utilities (Frontend)
+
+---
+
+### 🏗️ Project Structure
+
 
 oil-pump-kafka-ts/
-├── data-producer/
-├── data-consumer/
-├── frontend/
-├── initdb/
-├── docker-compose.yml
-└── README.md
+├── data-producer/ # Simulates and sends data to Kafka
+│ ├── src/
+│ ├── Dockerfile
+│ ├── jest.config.js
+│ ├── package.json
+│ └── tsconfig.json
+├── data-consumer/ # Consumes from Kafka, stores in DB, serves API
+│ ├── src/
+│ ├── Dockerfile
+│ ├── jest.config.js
+│ ├── nodemon.json
+│ ├── package.json
+│ └── tsconfig.json
+├── frontend/ # Angular frontend application
+│ ├── src/
+│ ├── Dockerfile
+│ ├── nginx.conf # Nginx config for serving & proxying
+│ ├── angular.json
+│ ├── package.json
+│ └── tsconfig.json
+├── initdb/ # PostgreSQL initialization script
+│ └── init.sql
+├── docker-compose.yml # Main Docker Compose file to orchestrate all services
+├── .env # Local environment variables (GITIGNORED!)
+├── .env.example # Example environment variables
+├── postgres_password.txt # PostgreSQL password secret (GITIGNORED!)
+└── README.md # This file
 
+---
 
-**API Endpoints (Provided by `data-consumer`):**
+### 🚀 Setup & Running Instructions
 
-* `GET /api/pressure`: Retrieve recent pressure-related data (suction, discharge, npsh).
-* `GET /api/material`: Retrieve recent material-related data (vibration, bearing temp, impeller speed).
-* `GET /api/fluid`: Retrieve recent fluid-related data (flow rate, fluid temp, lubrication level).
-* `GET /health`: Basic health check endpoint.
+Follow these steps precisely to get the entire application running using Docker Compose.
 
-**Run Locally using Docker Compose:**
+**Prerequisites:**
 
-1.  **Prerequisites:** Ensure you have Docker and Docker Compose installed.
-2.  **Clone Repository:** `git clone <your-repo-url>`
-3.  **Navigate to Directory:** `cd oil-pump-kafka-ts`
-4.  **Build and Start Containers:**
+*   [Docker](https://docs.docker.com/get-docker/) installed and running.
+*   [Docker Compose](https://docs.docker.com/compose/install/) installed (usually included with Docker Desktop).
+*   [Git](https://git-scm.com/downloads) (for cloning the repository).
+*   A text editor (like VS Code).
+*   Terminal / Command Prompt / PowerShell.
+
+**Steps:**
+
+1.  **Clone the Repository (If Applicable):**
     ```bash
-    docker compose up --build -d
-    ```
-    * `--build`: Forces Docker to rebuild the images if the code has changed.
-    * `-d`: Runs containers in detached mode (in the background).
-
-5.  **Access Services:**
-    * **Angular Frontend:** `http://localhost:4200`
-    * **Data Consumer API:** `http://localhost:8080` (e.g., `http://localhost:8080/api/pressure`)
-    * **PostgreSQL (e.g., using pgAdmin/DBeaver):**
-        * Host: `localhost`
-        * Port: `5432` (as mapped in `docker-compose.yml`)
-        * Database: `oil`
-        * User: `postgres`
-        * Password: `example` (or your value)
-    * **Kafka (Optional - using tools like Offset Explorer/AKHQ):** Connect to broker `localhost:29092`
-
-6.  **View Logs:**
-    ```bash
-    docker compose logs -f             # View logs for all services
-    docker compose logs -f data-producer # View logs for a specific service
+    git clone <repository-url>
+    cd oil-pump-kafka-ts
     ```
 
-7.  **Stop Services:**
-    ```bash
-    docker compose down
-    ```
-    * To remove volumes (lose PostgreSQL data): `docker compose down -v`
+2.  **Create PostgreSQL Password Secret:**
+    *   In the project root directory (`oil-pump-kafka-ts/`), create a file named `postgres_password.txt`.
+    *   Inside this file, put **only** your desired password for the PostgreSQL database (e.g., `mysecretpgpassword`).
+    *   **SECURITY:** Ensure `postgres_password.txt` is listed in your `.gitignore` file to prevent committing it.
 
-**Development:**
+3.  **Configure Environment Variables:**
+    *   Copy the example environment file:
+        ```bash
+        cp .env.example .env
+        ```
+    *   Open the `.env` file.
+    *   **CRITICAL:** Set a unique, strong value for `API_KEY`. This key is needed by the frontend and for any direct API testing.
+    *   Adjust `POSTGRES_PORT` (default `5434`) if needed (this is the *host* port mapping).
+    *   Review other variables like Kafka topics if necessary.
+    *   **SECURITY:** Ensure `.env` is listed in your `.gitignore` file.
 
-* Each service (`data-producer`, `data-consumer`, `frontend`) has its own `package.json` and can be developed individually.
-* Use `npm run dev` (if configured, like in `data-consumer`) for hot-reloading during development (usually run outside Docker for easier local setup).
+4.  **Configure Frontend API Key:**
+    *   Open `frontend/src/environments/environment.ts`.
+    *   Make sure the value for `apiKey` **exactly matches** the `API_KEY` you set in your `.env` file.
+        ```typescript
+        // frontend/src/environments/environment.ts
+        export const environment = {
+          production: true,
+          apiUrl: '/api',
+          apiKey: 'YOUR_API_KEY_FROM_DOT_ENV' // <<< MATCH .env EXACTLY
+        };
+        ```
 
-**Author:**
+5.  **Clean Docker Environment (Recommended First Time):**
+    *   Open your terminal in the project root.
+    *   `docker-compose down -v` (Stops containers, removes networks, **deletes database volume**)
+    *   `docker builder prune -af` (Clears potentially stale build cache)
 
-* Aaditya
+6.  **Build Docker Images:**
+    *   Build all images using the latest code and configurations, bypassing the cache for certainty:
+        ```bash
+        docker-compose build --no-cache
+        ```
+
+7.  **Start All Services:**
+    *   Start the application stack in detached mode:
+        ```bash
+        docker-compose up -d
+        ```
+    *   Wait 60-90 seconds for Kafka and Postgres health checks to pass and all services to initialize.
+
+8.  **Verify Services:**
+    *   Check running containers:
+        ```bash
+        docker ps
+        ```
+        *(Ensure all services defined in `docker-compose.yml` are 'Up' and 'healthy' where applicable)*.
+    *   Monitor logs (open separate terminals or follow all):
+        ```bash
+        docker-compose logs -f data-producer
+        docker-compose logs -f data-consumer
+        docker-compose logs -f frontend
+        # or 'docker-compose logs -f' for all
+        ```
+
+9.  **Access the Frontend:**
+    *   Open your web browser and navigate to: `http://localhost:4200`
+    *   **Important:** If you encounter issues, try an **Incognito/Private** browser window first to rule out browser caching. If it works there, clear the cache in your normal browser for `localhost:4200`.
+
+10. **Stopping the Application:**
+    *   To stop all running services:
+        ```bash
+        docker-compose down
+        ```
+    *   To stop services AND remove the database volume (deletes all stored data):
+        ```bash
+        docker-compose down -v
+        ```
+
+---
+
+### 🧪 Testing
+
+*   **Backend:** Jest is configured for both `data-producer` and `data-consumer`. Example test files (`*.test.ts`) are included in the `src/__tests__` directories. Run tests within the respective service directory using `npm test`. Current tests are basic examples and should be expanded for comprehensive coverage.
+*   **Frontend:** Angular's default testing setup (Karma/Jasmine or Jest depending on CLI version/config) is available. Run tests using `ng test` within the `frontend` directory.
+
+---
+
+### ⚙️ Configuration
+
+*   **Environment Variables:** Most configuration is handled via the `.env` file in the project root, loaded by Docker Compose. See `.env.example` for available options. Key variables include:
+    *   `API_KEY`: Secures the data API. **Must be set.**
+    *   `KAFKA_BROKERS`: Kafka broker address(es). Defaults correctly for Docker Compose internal (`kafka:9092`) vs. host access (`localhost:29092`).
+    *   `KAFKA_TOPIC`, `KAFKA_DLQ_TOPIC`: Names for the main and dead-letter Kafka topics.
+    *   `POSTGRES_...`: Database connection details (host port mapping, user, db name).
+    *   `MESSAGE_INTERVAL_MS`: Controls data production speed.
+*   **Docker Secrets:** The `POSTGRES_PASSWORD` is managed via Docker secrets. The `data-consumer` reads the password from the file path specified by `POSTGRES_PASSWORD_FILE` (mounted by Docker Compose from `postgres_password.txt`).
+*   **Nginx:** Frontend proxy settings are in `frontend/nginx.conf`.
+
+---
+
+### 📡 API Usage
+
+*   **Base URL:** `http://localhost:8080/api` (when accessing directly) or `http://localhost:4200/api` (when accessing via the proxied frontend).
+*   **Authentication:** All data endpoints require an `X-API-Key` header containing the value set in your `.env` file.
+*   **Endpoints:**
+    *   `GET /api/health`: Public health check (no API key required). Returns service status.
+    *   `GET /api/pressure?page=N&limit=M`: Get paginated pressure data.
+    *   `GET /api/material?page=N&limit=M`: Get paginated material/condition data.
+    *   `GET /api/fluid?page=N&limit=M`: Get paginated fluid dynamics data.
+    *   *(Default `limit` is 50, max is 100)*.
+
+---
+
+### 🧑‍💻 Development Notes
+
+*   **Nginx Proxy:** The frontend service uses Nginx to serve the built Angular application and proxy API requests (`/api/*`) to the `data-consumer` service, handling CORS issues within the Docker network.
+*   **Docker Compose Overrides:** Environment variables set directly in the `environment:` section of `docker-compose.yml` (like `KAFKA_BROKERS: kafka:9092` or `POSTGRES_HOST: postgres`) override any values loaded from the `.env` file for that specific service, ensuring correct internal hostnames are used within Docker.
+
+---
+
+### 🔮 Future Enhancements (TODO)
+
+*   Implement more robust input validation (e.g., Zod) for Kafka messages.
+*   Add user authentication/authorization (e.g., JWT).
+*   Develop a strategy for monitoring and reprocessing messages from the DLQ.
+*   Improve UI/UX, add more chart types or data filtering options.
+*   Implement comprehensive end-to-end and integration tests.
+*   Add monitoring and alerting (e.g., Prometheus, Grafana).
+*   Secure API key handling for production frontend builds (avoid hardcoding).
+*   Explore Kafka Streams or KSQLdb for stream processing.
+
+---
+
+### 📜 License
+
+Distributed under the MIT License. See `LICENSE` file for more information.
+
+
+### Author :
+Aaditya
