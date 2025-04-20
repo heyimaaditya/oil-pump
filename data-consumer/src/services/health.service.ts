@@ -1,32 +1,26 @@
 import { dbService } from './db.service';
 import logger from '../logger';
 
-export class HealthService {
-    async check(): Promise<{ status: string; details: Record<string, string> }> {
-        const details: Record<string, string> = {};
-        let overallStatus = 'UP';
-
-        // Check Database Connection
-        try {
-            const dbOk = await dbService.checkConnection();
-            details.database = dbOk ? 'UP' : 'DOWN';
-            if (!dbOk) {
-                overallStatus = 'DOWN';
-            }
-        } catch (error) {
-            logger.error({ err: error }, 'Health check: Database check failed');
-            details.database = 'DOWN';
-            overallStatus = 'DOWN';
-        }
-
-       
-        details.kafkaConsumer = 'UNKNOWN'; // Or check this.consumer.events state if possible
-
-        return {
-            status: overallStatus,
-            details: details,
-        };
-    }
+interface HealthStatus {
+    status: 'UP' | 'DOWN' | 'DEGRADED';
+    details: Record<string, { status: string; details?: any; error?: string }>;
 }
 
+export class HealthService {
+    async check(): Promise<HealthStatus> {
+        const response: HealthStatus = { status: 'UP', details: {} };
+        try {
+            const dbOk = await dbService.checkConnection();
+            if (dbOk) { response.details.database = { status: 'UP' }; }
+            else { response.details.database = { status: 'DOWN', error: 'Failed simple query check.' }; response.status = 'DOWN'; }
+        } catch (error: any) {
+            logger.error({ err: error }, 'Health check: Database check threw an error');
+            response.details.database = { status: 'DOWN', error: error.message || 'Exception during check.' }; response.status = 'DOWN';
+        }
+        
+        response.details.kafka = { status: 'UNKNOWN', details: 'No direct connection check implemented.' };
+        logger.info({ healthStatus: response }, 'Health check completed');
+        return response;
+    }
+}
 export const healthService = new HealthService();
