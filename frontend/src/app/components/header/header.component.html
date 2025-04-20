@@ -1,0 +1,28 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" routerLink="/">
+        <i class="bi bi-activity me-2"></i> 
+        Oil Pump Monitor
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            
+            <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/pressure" routerLinkActive="active">Pressure</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/material" routerLinkActive="active">Material</a>
+          </li>
+           <li class="nav-item">
+            <a class="nav-link" routerLink="/fluid" routerLinkActive="active">Fluid</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>

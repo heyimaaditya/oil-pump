@@ -1,21 +1,25 @@
 import logger from '../logger';
+import { Partitioners } from 'kafkajs'; 
 
-const brokers = (process.env.KAFKA_BROKERS || 'kafka:9092').split(',');
-logger.info({ brokers }, 'Kafka brokers configured');
+const defaultBroker = 'kafka:9092';
+const brokers = (process.env.KAFKA_BROKERS || defaultBroker).split(',');
+logger.info({ brokers, source: process.env.KAFKA_BROKERS ? 'env' : 'default' }, 'Kafka brokers configured for producer');
 
 export const kafkaConfig = {
   clientId: 'data-producer-app',
   brokers: brokers,
   topic: process.env.KAFKA_TOPIC || 'oil_equipment_data',
-  connectionTimeout: 5000, // Increased timeout
-  requestTimeout: 30000, // Increased timeout
+  connectionTimeout: 5000,
+  requestTimeout: 30000,
   retry: {
-    initialRetryTime: 300, // Increased retry time
-    retries: 10, // Increased retries
+    initialRetryTime: 300,
+    retries: 10,
+    maxRetryTime: 30000
   },
 };
 
 export const producerConfig = {
   messageIntervalMs: parseInt(process.env.MESSAGE_INTERVAL_MS || '1000', 10),
-  runTimeSeconds: parseInt(process.env.RUN_TIME_SECONDS || '0', 10), // 0 means run indefinitely
+  runTimeSeconds: parseInt(process.env.RUN_TIME_SECONDS || '0', 10),
+ 
 };

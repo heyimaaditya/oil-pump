@@ -1,0 +1,26 @@
+
+.chart-container {
+    position: relative; 
+  }
+  
+  /* Ensure canvas fills its wrapper */
+  canvas {
+      display: block;
+      width: 100% !important; 
+      height: 100% !important;
+  }
+  
+  /* Style pagination buttons */
+  .page-link {
+      cursor: pointer;
+  }
+  
+  .page-item.disabled .page-link {
+      cursor: not-allowed;
+  }
+  
+  .page-item span.page-link {
+      cursor: default;
+      background-color: transparent;
+      border: none;
+  }

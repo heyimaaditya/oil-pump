@@ -1,6 +1,5 @@
 import { kafkaConfig, producerConfig } from './kafka.config';
 
-// Centralized configuration export
 export const config = {
     kafka: kafkaConfig,
     producer: producerConfig,

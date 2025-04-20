@@ -6,7 +6,7 @@ describe('DataGenerator', () => {
 
     expect(data).toBeDefined();
     expect(typeof data.timestamp).toBe('string');
-    expect(new Date(data.timestamp)).toBeInstanceOf(Date); // Check if parsable date
+    expect(Date.parse(data.timestamp)).not.toBeNaN(); 
     expect(typeof data.suction_pressure).toBe('number');
     expect(typeof data.discharge_pressure).toBe('number');
     expect(typeof data.flow_rate).toBe('number');
@@ -20,14 +20,17 @@ describe('DataGenerator', () => {
   });
 
   it('should generate values within expected ranges (basic check)', () => {
-    // Run a few times to increase confidence
-    for (let i = 0; i < 5; i++) {
+  
+    for (let i = 0; i < 10; i++) {
       const data = DataGenerator.generateData();
       expect(data.suction_pressure).toBeGreaterThanOrEqual(5);
       expect(data.suction_pressure).toBeLessThanOrEqual(30);
+      expect(data.discharge_pressure).toBeGreaterThan(data.suction_pressure);
       expect(data.impeller_speed).toBeGreaterThanOrEqual(1000);
       expect(data.impeller_speed).toBeLessThanOrEqual(3600);
-      // Add more range checks as needed
+      expect(data.lubrication_oil_level).toBeGreaterThanOrEqual(0.6);
+      expect(data.lubrication_oil_level).toBeLessThanOrEqual(1.0);
+    
     }
   });
 });

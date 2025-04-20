@@ -54,7 +54,7 @@ oil-pump-kafka-ts/
     * **Data Consumer API:** `http://localhost:8080` (e.g., `http://localhost:8080/api/pressure`)
     * **PostgreSQL (e.g., using pgAdmin/DBeaver):**
         * Host: `localhost`
-        * Port: `5434` (as mapped in `docker-compose.yml`)
+        * Port: `5432` (as mapped in `docker-compose.yml`)
         * Database: `oil`
         * User: `postgres`
         * Password: `example` (or your value)

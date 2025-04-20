@@ -1,0 +1,14 @@
+
+.chart-container {
+    position: relative;
+  }
+  
+  canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+  }
+  
+  .page-link { cursor: pointer; }
+  .page-item.disabled .page-link { cursor: not-allowed; }
+  .page-item span.page-link { cursor: default; background-color: transparent; border: none; }

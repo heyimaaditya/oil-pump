@@ -1,0 +1,33 @@
+<div class="container mt-5">
+    <div class="p-5 mb-4 bg-light rounded-3 shadow-sm">
+      <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">Welcome to the Oil Pump Monitoring System</h1>
+        <p class="col-md-8 fs-4">
+          This application visualizes real-time data received from oil pump sensors via Kafka.
+          Explore different data categories using the navigation above.
+        </p>
+        <hr class="my-4">
+        <p>Select a category to view detailed charts and data:</p>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+            <a class="btn btn-primary btn-lg me-md-2" routerLink="/pressure" role="button">View Pressure Data</a>
+            <a class="btn btn-outline-secondary btn-lg me-md-2" routerLink="/material" role="button">View Material Data</a>
+            <a class="btn btn-outline-secondary btn-lg" routerLink="/fluid" role="button">View Fluid Data</a>
+        </div>
+      </div>
+    </div>
+  
+    <div class="row align-items-md-stretch">
+        <div class="col-md-6 mb-4">
+          <div class="h-100 p-5 text-bg-dark rounded-3">
+            <h2>Real-time Data</h2>
+            <p>Data is continuously produced, sent through Kafka, processed, and stored for analysis.</p>
+          </div>
+        </div>
+        <div class="col-md-6 mb-4">
+          <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+            <h2>Technology Stack</h2>
+            <p>Built with Angular, Kafka, PostgreSQL, Node.js (TypeScript), Express, Docker, and more.</p>
+          </div>
+        </div>
+      </div>
+  </div>

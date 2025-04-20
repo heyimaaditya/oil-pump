@@ -1,37 +1,39 @@
 {
     "name": "data-producer",
     "version": "1.0.0",
-    "description": "Generates and sends equipment data to Kafka",
+    "description": "Generates and sends oil pump data to Kafka",
     "main": "dist/main.js",
     "scripts": {
-        "build": "tsc",
-        "start": "node dist/main.js",
-        "start:prod": "NODE_ENV=production node dist/main.js",
-        "dev": "pino-pretty -c -t SYS:standard | ts-node src/main.ts",
-        "test": "jest"
+      "build": "tsc",
+      "start": "node dist/main.js",
+      "start:prod": "NODE_ENV=production node dist/main.js",
+      "dev": "ts-node src/main.ts | pino-pretty -c -t SYS:standard",
+      "test": "jest",
+      "lint": "eslint . --ext .ts"
     },
     "keywords": [
-        "kafka",
-        "typescript",
-        "node",
-        "producer"
+      "kafka",
+      "producer",
+      "typescript"
     ],
-    "author": "Aaditya",
+    "author": "",
     "license": "ISC",
     "dependencies": {
-        "kafkajs": "^2.2.4",
-        "pino": "^9.6.0"
+      "kafkajs": "^2.2.4",
+      "pino": "^8.15.0"
     },
     "devDependencies": {
-        "@types/jest": "^29.5.14",
-        "@types/node": "^18.19.86",
-        "@types/pino": "^7.0.4",
-        "jest": "^29.7.0",
-        "nodemon": "^3.1.9",
-        "pino-pretty": "^13.0.0",
-        "ts-jest": "^29.3.2",
-        "ts-node": "^10.9.2",
-        "typescript": "^5.8.3"
-    },
-    "type": "commonjs"
-}
+      "@types/jest": "^29.5.1",
+      "@types/node": "^18.17.0",
+      "@types/pino": "^7.0.5",
+      "@typescript-eslint/eslint-plugin": "^6.0.0",
+      "@typescript-eslint/parser": "^6.0.0",
+      "eslint": "^8.45.0",
+      "jest": "^29.5.0",
+      "nodemon": "^3.0.1",
+      "pino-pretty": "^10.2.0",
+      "ts-jest": "^29.1.0",
+      "ts-node": "^10.9.1",
+      "typescript": "^5.1.6"
+    }
+  }
