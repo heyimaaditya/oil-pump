@@ -20,7 +20,7 @@ export class KafkaProducerService {
         // Route kafkajs logs through pino
         const { message, ...extra } = log;
         (logger as any)[label.toLowerCase()]({ ...extra, kafka_namespace: namespace }, message);
-      }
+      } 
     });
     this.producer = this.kafka.producer({
         allowAutoTopicCreation: true, // Ensure topic exists

@@ -1,0 +1,126 @@
+version: '3.8'
+
+postgres_password_secret:
+    file: ./postgres_password.txt
+services:
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2 # Use a specific stable version
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - oil-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.2 # Use a specific stable version
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      # Expose Kafka port for external tools if needed, but services use internal network
+      - "9092:9092" # For internal Docker network communication
+      - "29092:29092" # For access from host machine if needed
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      # Listener configuration: PLAINTEXT for internal, EXTERNAL for host access
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # For single node setup
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1     # For single node setup
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 # For single node setup
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true' # Allow automatic topic creation by producer/consumer
+    networks:
+      - oil-network
+
+   postgres:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    secrets: # Assign the secret to the container
+      - postgres_password_secret
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-oil}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      # Read password from the secret file inside the container
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password_secret
+    ports:
+      - "${POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+    networks:
+      - oil-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-oil}"] # Use $$ to escape $ for shell
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+
+  data-producer:
+    build:
+      context: ./data-producer
+      dockerfile: Dockerfile
+    container_name: data_producer_service
+    env_file: # Load environment variables from .env file
+      - .env
+    depends_on:
+      - kafka
+    networks:
+      - oil-network
+    restart: on-failure
+
+  data-consumer:
+    build:
+      context: ./data-consumer
+      dockerfile: Dockerfile
+    container_name: data_consumer_service
+    secrets: # Assign the secret for DB connection
+      - postgres_password_secret
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy # Wait for postgres healthcheck
+      kafka: {} # Wait for kafka service to start (doesn't guarantee broker readiness)
+    ports:
+      - "${API_PORT:-8080}:${API_PORT:-8080}"
+    environment:
+      # Override specific variables if needed, or rely on .env
+      NODE_ENV: production # Set explicitly for production image
+      PORT: ${API_PORT:-8080}
+      # Point to the secret file path inside the container
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password_secret
+      # Ensure API_KEY is set securely, ideally not in .env for prod
+      API_KEY: ${API_KEY:-change_in_prod_env}
+    networks:
+      - oil-network
+    restart: on-failure
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      # Pass API Key securely during build if needed (better alternatives exist)
+      # args:
+      #   API_KEY: ${API_KEY} # Requires ARG in Dockerfile and setting in environment.ts
+    container_name: frontend_service
+    ports:
+      - "4200:80"
+    depends_on:
+      - data-consumer
+    networks:
+      - oil-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  oil-network:
+    driver: bridge
