@@ -238,6 +238,10 @@ Distributed under the MIT License. See `LICENSE` file for more information.
 ### Author :
 Aaditya
 
+### HLD of OIL_PIMP MONITORING SYSTEM:
+![Image](https://github.com/user-attachments/assets/e8a26376-1d1a-41f0-9868-78d87dae8c8e)
+
+
 ![Image](https://github.com/user-attachments/assets/918bf2e3-7d3f-4bd3-95fb-b39bec0160da)
 ![Image](https://github.com/user-attachments/assets/8caac0a7-2fee-43c9-96e0-50cbfb51236f)
 
