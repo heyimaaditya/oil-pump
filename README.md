@@ -2,6 +2,10 @@
 
 ![Pipeline](https://img.shields.io/badge/Pipeline-Kafka-blue?logo=apachekafka) ![Database](https://img.shields.io/badge/Database-PostgreSQL-blue?logo=postgresql) ![Backend](https://img.shields.io/badge/Backend-Node.js%20(TS)-brightgreen?logo=nodedotjs) ![Frontend](https://img.shields.io/badge/Frontend-Angular-red?logo=angular) ![Infrastructure](https://img.shields.io/badge/Infra-Docker-blue?logo=docker)
 
+##[Youtube Demo](https://youtu.be/v4ONHyGWSd8)
+
+
+
 ## Overview
 
 This project simulates an IoT scenario for monitoring oil pump sensor data. It demonstrates a full-stack application using a microservices-oriented approach with modern technologies and production-ready practices.
